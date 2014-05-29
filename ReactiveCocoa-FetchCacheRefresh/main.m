@@ -8,12 +8,30 @@
 
 #import <Foundation/Foundation.h>
 
+#import "ExampleManager.h"
+
 
 
 int main(int argc, const char * argv[])
 {
     @autoreleasepool {
-        NSLog(@"Hello, World!");
+        ExampleManager *manager = [ExampleManager new];
+
+        [[manager fetchNumber] subscribeNext:^(NSNumber *number) {
+            NSLog(@"Subscriber #1: %@", number);
+        }];
+
+        [[manager fetchNumber] subscribeNext:^(NSNumber *number) {
+            NSLog(@"Subscriber #2: %@", number);
+        }];
+
+        [manager refreshNumber];
+
+        [[manager fetchNumber] subscribeNext:^(NSNumber *number) {
+            NSLog(@"Subscriber #3: %@", number);
+        }];
+
+        NSLog(@"Goodbye, World!");
     }
 
     return 0;

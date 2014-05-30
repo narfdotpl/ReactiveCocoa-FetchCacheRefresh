@@ -14,6 +14,7 @@
 @property (strong, nonatomic) NSNumber *everBiggerNumber;
 
 @property (strong, nonatomic) RACMulticastConnection *numberConnection;
+@property (strong, nonatomic) RACReplaySubject *numberSubject;
 
 @end
 
@@ -33,7 +34,7 @@
 - (void)refreshNumber
 {
     NSLog(@"Performing refresh...");
-    #warning TODO: implement `-refreshNumber`
+    [[self fetchNumberPrivate] subscribe:self.numberSubject];
 }
 
 
@@ -55,11 +56,20 @@
 - (RACMulticastConnection *)numberConnection
 {
     if (!_numberConnection) {
-        _numberConnection = [[self fetchNumberPrivate] multicast:[RACReplaySubject subject]];
+        _numberConnection = [[self fetchNumberPrivate] multicast:self.numberSubject];
         [_numberConnection connect];
     }
 
     return _numberConnection;
+}
+
+- (RACReplaySubject *)numberSubject
+{
+    if (!_numberSubject) {
+        _numberSubject = [RACReplaySubject replaySubjectWithCapacity:1];
+    }
+
+    return _numberSubject;
 }
 
 - (RACSignal *)fetchNumberPrivate

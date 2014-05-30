@@ -13,6 +13,8 @@
 
 @property (strong, nonatomic) NSNumber *everBiggerNumber;
 
+@property (strong, nonatomic) RACMulticastConnection *numberConnection;
+
 @end
 
 
@@ -25,13 +27,7 @@
 
 - (RACSignal *)fetchNumber
 {
-    NSLog(@"Performing potentially time-consuming fetch...");
-
-    return [RACSignal createSignal:^RACDisposable *(id<RACSubscriber> subscriber) {
-        [subscriber sendNext:self.everBiggerNumber];
-
-        return [RACDisposable new];
-    }];
+    return self.numberConnection.signal;
 }
 
 - (void)refreshNumber
@@ -54,6 +50,27 @@
     _everBiggerNumber = @(_everBiggerNumber.integerValue + 1);
 
     return _everBiggerNumber;
+}
+
+- (RACMulticastConnection *)numberConnection
+{
+    if (!_numberConnection) {
+        _numberConnection = [[self fetchNumberPrivate] multicast:[RACReplaySubject subject]];
+        [_numberConnection connect];
+    }
+
+    return _numberConnection;
+}
+
+- (RACSignal *)fetchNumberPrivate
+{
+    NSLog(@"Performing potentially time-consuming fetch...");
+
+    return [RACSignal createSignal:^RACDisposable *(id<RACSubscriber> subscriber) {
+        [subscriber sendNext:self.everBiggerNumber];
+
+        return [RACDisposable new];
+    }];
 }
 
 

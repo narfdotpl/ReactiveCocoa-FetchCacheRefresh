@@ -11,10 +11,9 @@
 
 @interface ExampleManager ()
 
+@property (strong, nonatomic) RACSignal *fetchNumber;
 @property (strong, nonatomic) NSNumber *everBiggerNumber;
-
-@property (strong, nonatomic) RACMulticastConnection *numberConnection;
-@property (strong, nonatomic) RACReplaySubject *numberSubject;
+@property (strong, nonatomic) NSNumber *memoizedNumber;
 
 @end
 
@@ -28,13 +27,20 @@
 
 - (RACSignal *)fetchNumber
 {
-    return self.numberConnection.signal;
+    if (!_fetchNumber) {
+        _fetchNumber = RACObserve(self, memoizedNumber);
+        [self refreshNumber];
+    }
+
+    return _fetchNumber;
 }
 
 - (void)refreshNumber
 {
     NSLog(@"Performing refresh...");
-    [[self fetchNumberPrivate] subscribe:self.numberSubject];
+    [[self fetchNumberPrivate] subscribeNext:^(NSNumber *number) {
+        self.memoizedNumber = number;
+    }];
 }
 
 
@@ -51,25 +57,6 @@
     _everBiggerNumber = @(_everBiggerNumber.integerValue + 1);
 
     return _everBiggerNumber;
-}
-
-- (RACMulticastConnection *)numberConnection
-{
-    if (!_numberConnection) {
-        _numberConnection = [[self fetchNumberPrivate] multicast:self.numberSubject];
-        [_numberConnection connect];
-    }
-
-    return _numberConnection;
-}
-
-- (RACReplaySubject *)numberSubject
-{
-    if (!_numberSubject) {
-        _numberSubject = [RACReplaySubject replaySubjectWithCapacity:1];
-    }
-
-    return _numberSubject;
 }
 
 - (RACSignal *)fetchNumberPrivate

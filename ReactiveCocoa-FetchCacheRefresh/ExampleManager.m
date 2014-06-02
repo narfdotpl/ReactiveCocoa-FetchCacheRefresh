@@ -6,6 +6,8 @@
 //
 
 
+#import <ReactiveCocoa/RACEXTScope.h>
+
 #import "ExampleManager.h"
 
 
@@ -38,7 +40,10 @@
 - (void)refreshNumber
 {
     NSLog(@"Performing refresh...");
+
+    @weakify(self);
     [[self fetchNumberPrivate] subscribeNext:^(NSNumber *number) {
+        @strongify(self);
         self.memoizedNumber = number;
     }];
 }
